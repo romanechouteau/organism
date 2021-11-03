@@ -5,6 +5,8 @@
 </template>
 
 <script lang="ts">
+import Vue from 'vue'
+
 import Webgl from '~/webgl/index'
 import EvolutionScene from '~/webgl/scenes/Evolution/index'
 
@@ -13,7 +15,7 @@ interface DataTypes {
   scene?: EvolutionScene
 }
 
-export default {
+export default Vue.extend({
   data (): DataTypes {
     return {
       webgl: undefined,
@@ -25,8 +27,10 @@ export default {
       canvas: this.$refs.webglCanvas as HTMLCanvasElement
     })
     this.scene = new EvolutionScene()
+    this.webgl.sceneController = this.scene
     this.webgl.scene = this.scene.scene
 
+    this.webgl.setScene()
     this.webgl.render()
 
     window.addEventListener('resize', this.resize)
@@ -44,7 +48,7 @@ export default {
       if (this.webgl) { this.webgl.hasFocus = false }
     }
   }
-}
+})
 </script>
 
 <style lang="stylus">

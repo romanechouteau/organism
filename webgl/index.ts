@@ -13,6 +13,7 @@ export default class Webgl {
   renderer?: WebGLRenderer
   hasFocus: boolean
   pixelRatio: number
+  sceneController?: any
 
   constructor ({ canvas }: ConstructorTypes) {
     this.width = 0
@@ -41,12 +42,23 @@ export default class Webgl {
 
   setCamera () {
     this.camera = new PerspectiveCamera(45, this.width / this.height, 1, 1000)
+    this.camera.position.set(0, 0, 10)
+  }
+
+  setScene () {
+    if (this.scene && this.camera) { this.scene.add(this.camera) }
   }
 
   resize (width: number, height: number) {
     this.width = width
     this.height = height
-    if (this.renderer) { this.renderer.setSize(width, height) }
+    if (this.camera) {
+      this.camera.aspect = this.width / this.height
+      this.camera.updateProjectionMatrix()
+    }
+    if (this.renderer) {
+      this.renderer.setSize(this.width, this.height)
+    }
   }
 
   getPixelRatio () {
@@ -55,6 +67,7 @@ export default class Webgl {
 
   render = () => {
     requestAnimationFrame(this.render)
+    if (this.sceneController) { this.sceneController.render() }
     if (this.hasFocus && this.scene && this.camera && this.renderer) {
       this.renderer.render(this.scene, this.camera)
     }
