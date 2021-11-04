@@ -101,7 +101,7 @@ export default class Evolution {
   }
 
   setFog () {
-    this.scene.fog = new Fog(0x001345, 0.1, 60)
+    this.scene.fog = new Fog(0x001345, 0.1, 55)
   }
 
   stepTwo () {

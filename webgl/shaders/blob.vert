@@ -1,3 +1,7 @@
+#ifndef HALF_PI
+#define HALF_PI 1.5707963267948966
+#endif
+
 uniform vec2 uMouse;
 uniform float uTime;
 uniform float uScale;
@@ -13,6 +17,12 @@ attribute vec3 aColor;
 attribute float aMerged;
 
 #include <fog_pars_vertex>
+
+// easing from https://github.com/glslify/glsl-easings
+
+float elasticOut(float t) {
+  return sin(-13.0 * (t + 1.0) * HALF_PI) * pow(2.0, -10.0 * t) + 1.0;
+}
 
 //
 // GLSL textureless classic 3D noise "cnoise",
@@ -203,7 +213,11 @@ void main() {
     pos.x -= distanceMouse * uMouse.x;
     pos.y -= distanceMouse * uMouse.y;
 
-    float scale = mix(uScale, uMergedScale, aMerged);
+    float timing = elasticOut(clamp(uTime * 0.5 - aOffset * 0.003 - 0.4, 0., 1.));
+    float timingMain = elasticOut(clamp(uTime * 0.5 - 0.2, 0., 1.));
+    float normalScale = mix(0., uScale, timing);
+    float mergedScale = mix(0., uMergedScale, timingMain);
+    float scale = mix(normalScale, mergedScale, aMerged);
 
     vec4 mvPosition = viewMatrix * modelMatrix * instanceMatrix * vec4(pos * scale, 1.0);
 
