@@ -1,7 +1,4 @@
-uniform vec2 uMouse;
 uniform float uTime;
-uniform float uOffset;
-uniform vec2 uPosition;
 
 varying float vNoise;
 
@@ -184,13 +181,8 @@ float pnoise(vec3 P, vec3 rep)
 }
 
 void main() {
-    float noise = cnoise(vec3(position + uTime * 0.8 + uOffset * 0.5));
-    vNoise = noise;
+  float noise = cnoise(vec3(position + uTime * 0.3));
+  vNoise = noise;
 
-    vec3 pos = position.xyz + normal * noise * (0.1 + uOffset * 0.0001);
-    float distanceMouse = 1. - clamp(distance(uMouse, uPosition), 0., 1.);
-    pos.x -= distanceMouse * uMouse.x;
-    pos.y -= distanceMouse * uMouse.y;
-
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+  gl_Position = projectionMatrix * modelViewMatrix * vec4( position.xyz, 1.0 );
 }

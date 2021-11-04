@@ -1,10 +1,13 @@
 import { WebGLRenderer, sRGBEncoding, Scene, PerspectiveCamera } from 'three'
 
+import Mouse from '~/webgl/utils/Mouse'
+
 interface ConstructorTypes {
   canvas: HTMLCanvasElement
 }
 
 export default class Webgl {
+  mouse?: Mouse
   width: number
   scene?: Scene
   height: number
@@ -25,6 +28,7 @@ export default class Webgl {
     this.resize(window.innerWidth, window.innerHeight)
     this.setRenderer()
     this.setCamera()
+    this.setMouse()
   }
 
   setRenderer () {
@@ -45,6 +49,10 @@ export default class Webgl {
     this.camera.position.set(0, 0, 10)
   }
 
+  setMouse () {
+    this.mouse = new Mouse({ width: this.width, height: this.height })
+  }
+
   setScene () {
     if (this.scene && this.camera) { this.scene.add(this.camera) }
   }
@@ -55,6 +63,10 @@ export default class Webgl {
     if (this.camera) {
       this.camera.aspect = this.width / this.height
       this.camera.updateProjectionMatrix()
+    }
+    if (this.mouse) {
+      this.mouse.width = this.width
+      this.mouse.height = this.height
     }
     if (this.renderer) {
       this.renderer.setSize(this.width, this.height)

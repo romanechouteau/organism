@@ -26,7 +26,11 @@ export default Vue.extend({
     this.webgl = new Webgl({
       canvas: this.$refs.webglCanvas as HTMLCanvasElement
     })
-    this.scene = new EvolutionScene()
+    this.scene = new EvolutionScene({
+      webgl: this.webgl,
+      camera: this.webgl.camera,
+      mouse: this.webgl.mouse
+    })
     this.webgl.sceneController = this.scene
     this.webgl.scene = this.scene.scene
 

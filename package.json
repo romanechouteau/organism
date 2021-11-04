@@ -12,7 +12,9 @@
   },
   "dependencies": {
     "core-js": "^3.15.1",
+    "gsap": "^3.8.0",
     "nuxt": "^2.15.7",
+    "poisson-disk-sampling": "^2.2.2",
     "three": "^0.134.0"
   },
   "devDependencies": {
