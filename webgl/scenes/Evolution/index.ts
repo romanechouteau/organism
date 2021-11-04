@@ -1,6 +1,6 @@
 // eslint-disable-next-line import/no-named-as-default
 import gsap from 'gsap'
-import { Scene, AmbientLight, PerspectiveCamera, Raycaster, Vector2, Fog } from 'three'
+import { Scene, AmbientLight, PerspectiveCamera, Raycaster, Vector2, FogExp2 } from 'three'
 
 import Blobs from './Blobs'
 import Background from './Background'
@@ -101,7 +101,7 @@ export default class Evolution {
   }
 
   setFog () {
-    this.scene.fog = new Fog(0x001345, 0.1, 55)
+    this.scene.fog = new FogExp2(0x1B3371, 0.035)
   }
 
   stepTwo () {
