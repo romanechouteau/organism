@@ -1,9 +1,15 @@
 uniform vec2 uMouse;
 uniform float uTime;
-uniform float uOffset;
-uniform vec2 uPosition;
+uniform float uScale;
+uniform float uMergedScale;
 
 varying float vNoise;
+varying vec3 vColor;
+
+attribute float aOffset;
+attribute vec2 aPosition;
+attribute vec3 aColor;
+attribute float aMerged;
 
 //
 // GLSL textureless classic 3D noise "cnoise",
@@ -184,13 +190,16 @@ float pnoise(vec3 P, vec3 rep)
 }
 
 void main() {
-    float noise = cnoise(vec3(position + uTime * 0.8 + uOffset * 0.5));
+    float noise = cnoise(vec3(position + uTime * 0.8 + aOffset * 0.5));
     vNoise = noise;
+    vColor = aColor;
 
-    vec3 pos = position.xyz + normal * noise * (0.1 + uOffset * 0.0001);
-    float distanceMouse = 1. - clamp(distance(uMouse, uPosition), 0., 1.);
+    vec3 pos = position.xyz + normal * noise * (0.1 + aOffset * 0.0001);
+    float distanceMouse = 1. - clamp(distance(uMouse, aPosition), 0., 1.);
     pos.x -= distanceMouse * uMouse.x;
     pos.y -= distanceMouse * uMouse.y;
 
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+    float scale = mix(uScale, uMergedScale, aMerged);
+
+    gl_Position = projectionMatrix * viewMatrix * modelMatrix * instanceMatrix * vec4(pos * scale, 1.0);
 }

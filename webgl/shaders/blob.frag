@@ -1,6 +1,5 @@
-uniform vec3 uColor;
-
 varying float vNoise;
+varying vec3 vColor;
 
 float hue2rgb(float f1, float f2, float hue) {
     if (hue < 0.0)
@@ -47,7 +46,7 @@ float darken (float value) {
 }
 
 void main() {
-    vec3 color = hsl2rgb(uColor);
+    vec3 color = hsl2rgb(vColor);
     vec3 shadowColor = vec3(darken(color.x), darken(color.y), darken(color.z));
     vec3 finalColor = mix(shadowColor, color, vNoise);
     gl_FragColor = vec4(finalColor, 0.95);
