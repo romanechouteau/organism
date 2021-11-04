@@ -14,7 +14,7 @@ import fragmentShader from '~/webgl/shaders/blob.frag'
 import Mouse from '~/webgl/utils/Mouse'
 import { getSizeAtZ } from '~/webgl/utils/sizing'
 
-const MAX_Z = -10
+const MAX_Z = 10
 const BASE_HSL_S = 70
 const BASE_HSL_L = 95
 
@@ -79,7 +79,7 @@ export default class Blobs {
     const maxWidth = width + 10
     const maxHeight = height + 10
     const p = new PoissonDiskSampling({
-      shape: [maxWidth, maxHeight, Math.abs(MAX_Z)],
+      shape: [maxWidth, maxHeight, MAX_Z],
       minDistance: 4,
       maxDistance: 8,
       tries: 30
@@ -88,7 +88,7 @@ export default class Blobs {
     this.blobPositions = [
       [0, 0, 0],
       ...points.map((point: number[]) =>
-        [point[0] - maxWidth / 2, point[1] - maxHeight / 2, -1 + point[2] + MAX_Z])
+        [point[0] - maxWidth / 2, point[1] - maxHeight / 2, -5 + point[2] - MAX_Z / 2])
     ]
 
     this.mesh = new InstancedMesh(this.blobGeometry, this.material, this.blobPositions.length)

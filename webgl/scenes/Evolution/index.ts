@@ -3,6 +3,7 @@ import gsap from 'gsap'
 import { Scene, AmbientLight, PerspectiveCamera, Raycaster, Vector2, FogExp2 } from 'three'
 
 import Blobs from './Blobs'
+import Particles from './Particles'
 import Background from './Background'
 import Webgl from '~/webgl'
 import Mouse from '~/webgl/utils/Mouse'
@@ -26,6 +27,7 @@ export default class Evolution {
   light?: AmbientLight
   blobs?: Blobs
   raycaster: Raycaster
+  particles?: Particles
   background?: Background
   mergedBlobs: number[]
 
@@ -41,6 +43,7 @@ export default class Evolution {
 
     this.setLight()
     this.setBlobs()
+    this.setParticles()
     this.setBackground()
     this.setFog()
     this.setClick()
@@ -55,7 +58,7 @@ export default class Evolution {
     this.raycaster.setFromCamera(mouseVector, this.camera)
 
     if (this.step < 3) {
-      const intersects = this.raycaster.intersectObjects(this.scene.children)
+      const intersects = this.raycaster.intersectObjects(this.scene.children.filter(child => child.name !== 'particles'))
       if (intersects[0]) {
         const blobId = intersects[0].instanceId
         if (blobId && this.blobs) {
@@ -98,6 +101,14 @@ export default class Evolution {
   setBackground () {
     this.background = new Background({ camera: this.camera })
     this.scene.add(this.background.wrapper)
+  }
+
+  setParticles () {
+    this.particles = new Particles({
+      camera: this.camera,
+      mouse: this.mouse
+    })
+    this.scene.add(this.particles.wrapper)
   }
 
   setFog () {
@@ -144,5 +155,6 @@ export default class Evolution {
   render () {
     if (this.background) { this.background.render() }
     if (this.blobs) { this.blobs.render() }
+    if (this.particles) { this.particles.render() }
   }
 }
