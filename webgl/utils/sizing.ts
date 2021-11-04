@@ -1,7 +1,7 @@
 import { PerspectiveCamera } from 'three'
 
-export const getSizeAtZ = (z: number, camera: PerspectiveCamera) => {
-  const cameraZ = camera.position.z
+export const getSizeAtZ = (z: number, camera: PerspectiveCamera, cameraCustomZ?: number) => {
+  const cameraZ = cameraCustomZ || camera.position.z
   const distance = cameraZ - z
 
   const vFov = camera.fov * Math.PI / 180

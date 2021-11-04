@@ -2,7 +2,10 @@
 import gsap from 'gsap'
 // @ts-ignore
 import PoissonDiskSampling from 'poisson-disk-sampling'
-import { Object3D, ShaderMaterial, SphereGeometry, PerspectiveCamera, Vector2, Matrix4, InstancedMesh, InstancedBufferAttribute } from 'three'
+import {
+  Object3D, ShaderMaterial, SphereGeometry, PerspectiveCamera, Vector2, Matrix4,
+  InstancedMesh, InstancedBufferAttribute, UniformsLib, UniformsUtils
+} from 'three'
 
 // @ts-ignore
 import vertexShader from '~/webgl/shaders/blob.vert'
@@ -52,24 +55,29 @@ export default class Blobs {
     this.mouseVector = new Vector2(this.mouse.xCoords, this.mouse.yCoords)
     this.blobGeometry = new SphereGeometry(size, 48, 48)
     this.material = new ShaderMaterial({
+      fog: true,
       transparent: true,
       vertexShader,
       fragmentShader,
-      uniforms: {
-        uTime: { value: this.timeElapsed },
-        uMouse: { value: [this.mouse.xCoords, this.mouse.yCoords] },
-        uScale: { value: this.size },
-        uMergedScale: { value: this.size }
-      }
+      uniforms: UniformsUtils.merge([
+        UniformsLib.fog,
+        {
+          uTime: { value: this.timeElapsed },
+          uMouse: { value: [this.mouse.xCoords, this.mouse.yCoords] },
+          uScale: { value: this.size },
+          uMergedScale: { value: this.size },
+          uChangeNoise: { value: 0 }
+        }
+      ])
     })
 
     this.setBlobs()
   }
 
   setBlobs () {
-    const { width, height } = getSizeAtZ(0, this.camera)
-    const maxWidth = width + 20
-    const maxHeight = height + 20
+    const { width, height } = getSizeAtZ(0, this.camera, 30)
+    const maxWidth = width + 10
+    const maxHeight = height + 10
     const p = new PoissonDiskSampling({
       shape: [maxWidth, maxHeight, Math.abs(MAX_Z)],
       minDistance: 4,
@@ -133,29 +141,37 @@ export default class Blobs {
     this.material.uniforms.uMouse.value = [this.mouseVector.x, this.mouseVector.y]
   }
 
-  mergeWithMain (id: number) {
-    const position = this.blobPositions[id]
+  mergeWithMain (ids: number[], duration: number = 1, stagger: number = 0, delay: number = 0, ease: string = 'elastic.out(1, 0.78)') {
+    const positions = ids.map(id => ({
+      x: this.blobPositions[id][0],
+      y: this.blobPositions[id][1],
+      z: this.blobPositions[id][2]
+    }))
     const matrix: Matrix4 = new Matrix4()
 
-    gsap.to(position, {
-      0: this.blobPositions[0][0],
-      1: this.blobPositions[0][1],
-      2: this.blobPositions[0][2],
-      duration: 1,
-      ease: 'elastic.out(1, 0.78)',
+    gsap.to(positions, {
+      x: this.blobPositions[0][0],
+      y: this.blobPositions[0][1],
+      z: this.blobPositions[0][2],
+      duration,
+      ease,
+      stagger,
+      delay,
       onUpdate: () => {
-        matrix.setPosition(
-          position[0],
-          position[1],
-          position[2]
-        )
-        this.mesh.setMatrixAt(id, matrix)
-        this.mesh.instanceMatrix.needsUpdate = true
+        ids.forEach((id, i) => {
+          matrix.setPosition(
+            positions[i].x,
+            positions[i].y,
+            positions[i].z
+          )
+          this.mesh.setMatrixAt(id, matrix)
+          this.mesh.instanceMatrix.needsUpdate = true
+        })
       }
     })
   }
 
-  grow (mergedBlobs: number[]) {
+  grow (mergedBlobs: number[], duration: number = 1, stagger: number = 0, delay: number = 0, ease: string = 'elastic.out(1, 0.78)') {
     const blobsAttr = Array.from(this.blobGeometry.getAttribute('aMerged').array)
     const blobsToMerge = mergedBlobs.flatMap((blobId) => {
       if (blobsAttr[blobId] !== 1) { return [{ val: blobsAttr[blobId], id: blobId }] }
@@ -164,8 +180,10 @@ export default class Blobs {
 
     gsap.to(blobsToMerge, {
       val: 1,
-      duration: 1,
-      ease: 'elastic.out(1, 0.78)',
+      duration,
+      ease,
+      stagger,
+      delay,
       onUpdate: () => {
         blobsToMerge.forEach((blob) => {
           blobsAttr[blob.id] = blob.val
@@ -176,10 +194,20 @@ export default class Blobs {
       }
     })
 
+    const targetSize = Math.min(1 + (mergedBlobs.length - 1) * 0.2, 8)
     gsap.to(this.material.uniforms.uMergedScale, {
-      value: 1 + (mergedBlobs.length - 1) * 0.2,
+      value: targetSize,
+      duration,
+      ease,
+      delay
+    })
+  }
+
+  stepTwo () {
+    gsap.to(this.material.uniforms.uChangeNoise, {
+      value: 1,
       duration: 1,
-      ease: 'elastic.out(1, 0.78)'
+      ease: 'power2.easeIn'
     })
   }
 }

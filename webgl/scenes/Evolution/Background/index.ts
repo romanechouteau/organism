@@ -24,7 +24,7 @@ export default class Background {
     this.camera = camera as PerspectiveCamera
     this.timeElapsed = 0
 
-    const { width, height } = getSizeAtZ(BACKGROUND_Z, this.camera)
+    const { width, height } = getSizeAtZ(BACKGROUND_Z, this.camera, 30)
     const planeGeometry = new PlaneGeometry(width, height)
     this.material = new ShaderMaterial({
       transparent: true,

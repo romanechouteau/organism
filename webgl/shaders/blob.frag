@@ -1,6 +1,8 @@
 varying float vNoise;
 varying vec3 vColor;
 
+#include <fog_pars_fragment>
+
 float hue2rgb(float f1, float f2, float hue) {
     if (hue < 0.0)
         hue += 1.0;
@@ -50,4 +52,6 @@ void main() {
     vec3 shadowColor = vec3(darken(color.x), darken(color.y), darken(color.z));
     vec3 finalColor = mix(shadowColor, color, vNoise);
     gl_FragColor = vec4(finalColor, 0.95);
+
+    #include <fog_fragment>
 }

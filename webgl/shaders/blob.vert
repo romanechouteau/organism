@@ -2,6 +2,7 @@ uniform vec2 uMouse;
 uniform float uTime;
 uniform float uScale;
 uniform float uMergedScale;
+uniform float uChangeNoise;
 
 varying float vNoise;
 varying vec3 vColor;
@@ -10,6 +11,8 @@ attribute float aOffset;
 attribute vec2 aPosition;
 attribute vec3 aColor;
 attribute float aMerged;
+
+#include <fog_pars_vertex>
 
 //
 // GLSL textureless classic 3D noise "cnoise",
@@ -194,12 +197,18 @@ void main() {
     vNoise = noise;
     vColor = aColor;
 
-    vec3 pos = position.xyz + normal * noise * (0.1 + aOffset * 0.0001);
+    float noiseScale = 1. + (uChangeNoise * distance(uMouse, vec2(0., 0.)) * 10.) * aMerged;
+    vec3 pos = position.xyz + normal * noise * (0.1 * noiseScale + aOffset * 0.0001);
     float distanceMouse = 1. - clamp(distance(uMouse, aPosition), 0., 1.);
     pos.x -= distanceMouse * uMouse.x;
     pos.y -= distanceMouse * uMouse.y;
 
     float scale = mix(uScale, uMergedScale, aMerged);
 
-    gl_Position = projectionMatrix * viewMatrix * modelMatrix * instanceMatrix * vec4(pos * scale, 1.0);
+    vec4 mvPosition = viewMatrix * modelMatrix * instanceMatrix * vec4(pos * scale, 1.0);
+
+    vec4 projectedPosition = projectionMatrix * mvPosition;
+    gl_Position = projectedPosition;
+
+    #include <fog_vertex>
 }
