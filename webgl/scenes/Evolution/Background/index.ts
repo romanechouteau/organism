@@ -21,6 +21,7 @@ export default class Background {
 
   constructor ({ camera }: OptionsTypes) {
     this.wrapper = new Object3D()
+    this.wrapper.name = 'background'
     this.camera = camera as PerspectiveCamera
     this.timeElapsed = 0
 

@@ -11,6 +11,7 @@ import Mouse from '~/webgl/utils/Mouse'
 const BLOB_SIZE = 1
 const BLOB_COUNT_STEP_2 = 7
 const BLOB_COUNT_STEP_3 = 13
+const BLOB_COUNT_STEP_4 = 6
 
 interface OptionsTypes {
   webgl: Webgl,
@@ -58,7 +59,9 @@ export default class Evolution {
     this.raycaster.setFromCamera(mouseVector, this.camera)
 
     if (this.step < 3) {
-      const intersects = this.raycaster.intersectObjects(this.scene.children.filter(child => child.name !== 'particles'))
+      const intersects = this.raycaster.intersectObjects(this.scene.children.filter(
+        child => child.name !== 'particles' && child.name !== 'background'
+      ))
       if (intersects[0]) {
         const blobId = intersects[0].instanceId
         if (blobId && this.blobs) {
@@ -75,11 +78,24 @@ export default class Evolution {
           }
         }
       }
+    } else if (this.step > 3 && this.blobs) {
+      const blobId = Math.floor(Math.random() * (this.mergedBlobs.length - 1)) + 1
+      this.mergedBlobs = this.mergedBlobs.filter(blob => blob !== blobId)
+      this.unmergeBlobs()
+      this.blobs.removeFromMain([blobId])
+
+      if (this.mergedBlobs.length === this.blobs.blobPositions.length - BLOB_COUNT_STEP_4) {
+        window.setTimeout(this.stepFive.bind(this), 300)
+      }
     }
   }
 
   mergeBlobs () {
     if (this.blobs) { this.blobs.grow(this.mergedBlobs) }
+  }
+
+  unmergeBlobs () {
+    if (this.blobs) { this.blobs.shrink(this.mergedBlobs) }
   }
 
   setLight () {
@@ -115,6 +131,11 @@ export default class Evolution {
     this.scene.fog = new FogExp2(0x1B3371, 0.035)
   }
 
+  stepOne () {
+    this.step = 1
+    this.blobs?.stepOne()
+  }
+
   stepTwo () {
     this.step = 2
     gsap.to(this.camera.position, {
@@ -146,9 +167,30 @@ export default class Evolution {
       this.blobs.mergeWithMain(blobsToMerge, 0.5, 0.005, 0.5, 'elastic.in(1, 0.78)')
       window.setTimeout(() => {
         this.mergedBlobs.push(...blobsToMerge)
-        // @ts-ignore
-        this.blobs.grow(this.mergedBlobs, 1.5, 0, 0.5, 'elastic.inOut(1, 0.78)')
+        this.blobs?.grow(this.mergedBlobs, 1.5, 0, 0.5, 'elastic.inOut(1, 0.78)')
+        this.stepFour()
       }, 700)
+    }
+  }
+
+  stepFour () {
+    this.step = 4
+  }
+
+  stepFive () {
+    this.step = 5
+    gsap.to(this.camera.position, {
+      delay: 0.8,
+      z: 10,
+      duration: 1,
+      ease: 'power2.easeOut',
+      onComplete: () => this.stepOne()
+    })
+
+    if (this.blobs) {
+      this.blobs.removeFromMain(this.mergedBlobs, 1.8, 0, 0.2, 'elastic.inOut(1, 0.78)')
+      this.mergedBlobs = []
+      this.blobs.shrink(this.mergedBlobs, 1.8, 0, 0.2, 'elastic.inOut(1, 0.78)')
     }
   }
 

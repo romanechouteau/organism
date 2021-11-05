@@ -203,6 +203,81 @@ export default class Blobs {
     })
   }
 
+  removeFromMain (ids: number[], duration: number = 1, stagger: number = 0, delay: number = 0, ease: string = 'elastic.out(1, 0.78)') {
+    ids.forEach((id) => {
+      const position = {
+        x: this.blobPositions[0][0],
+        y: this.blobPositions[0][1],
+        z: this.blobPositions[0][2]
+      }
+      const matrix: Matrix4 = new Matrix4()
+
+      gsap.to(position, {
+        x: this.blobPositions[id][0],
+        y: this.blobPositions[id][1],
+        z: this.blobPositions[id][2],
+        duration,
+        ease,
+        delay: delay + stagger * id,
+        onUpdate: () => {
+          matrix.setPosition(
+            position.x,
+            position.y,
+            position.z
+          )
+          this.mesh.setMatrixAt(id, matrix)
+          this.mesh.instanceMatrix.needsUpdate = true
+        }
+      })
+    })
+  }
+
+  shrink (mergedBlobs: number[], duration: number = 1, stagger: number = 0, delay: number = 0, ease: string = 'elastic.out(1, 0.78)') {
+    const unmergedBlobs = this.blobPositions.flatMap((_, id) => {
+      if (mergedBlobs.includes(id)) {
+        return []
+      }
+      return [id]
+    })
+    const blobsAttr = Array.from(this.blobGeometry.getAttribute('aMerged').array)
+    const blobsToUnmerge = unmergedBlobs.flatMap((blobId) => {
+      if (blobsAttr[blobId] !== 0) { return [{ val: blobsAttr[blobId], id: blobId }] }
+      return []
+    })
+
+    gsap.to(blobsToUnmerge, {
+      val: 0,
+      duration,
+      ease,
+      stagger,
+      delay,
+      onUpdate: () => {
+        blobsToUnmerge.forEach((blob) => {
+          blobsAttr[blob.id] = blob.val
+        })
+        this.blobGeometry.setAttribute('aMerged',
+          new InstancedBufferAttribute(new Float32Array(blobsAttr), 1)
+        )
+      }
+    })
+
+    const targetSize = Math.max(Math.min(Math.min(1 + (mergedBlobs.length - 1) * 0.2, 8), 8 - unmergedBlobs.length * 0.5), 1)
+    gsap.to(this.material.uniforms.uMergedScale, {
+      value: targetSize,
+      duration,
+      ease,
+      delay
+    })
+  }
+
+  stepOne () {
+    gsap.to(this.material.uniforms.uChangeNoise, {
+      value: 0,
+      duration: 1,
+      ease: 'power2.easeIn'
+    })
+  }
+
   stepTwo () {
     gsap.to(this.material.uniforms.uChangeNoise, {
       value: 1,
